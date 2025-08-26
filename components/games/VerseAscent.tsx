@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PsalmSection, Verse } from '../../types';
 
 interface GameProps {
@@ -6,6 +6,8 @@ interface GameProps {
   onGameOver: (score: number) => void;
   onQuit: () => void;
 }
+
+const BOARD_SIZE = 25; // 5x5 grid
 
 const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
   const [score, setScore] = useState(0);
@@ -16,16 +18,16 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
   const [diceRoll, setDiceRoll] = useState(0);
 
   const boardLayout = useMemo(() => {
-    const layout = section.verses.map((_, index) => ({ type: 'normal', target: index }));
-    // Add 2 ladders and 2 stumbles
-    const specialIndices = Array.from({ length: section.verses.length - 2 }, (_, i) => i + 1);
+    const layout = Array.from({ length: BOARD_SIZE }, (_, index) => ({ type: 'normal', target: index }));
+    // Add 4 ladders and 4 stumbles
+    const specialIndices = Array.from({ length: BOARD_SIZE - 2 }, (_, i) => i + 1);
     const shuffled = specialIndices.sort(() => 0.5 - Math.random());
-    layout[shuffled[0]].type = 'ladder';
-    layout[shuffled[1]].type = 'ladder';
-    layout[shuffled[2]].type = 'stumble';
-    layout[shuffled[3]].type = 'stumble';
+    
+    for(let i = 0; i < 4; i++) layout[shuffled[i]].type = 'ladder';
+    for(let i = 4; i < 8; i++) layout[shuffled[i]].type = 'stumble';
+    
     return layout;
-  }, [section.verses]);
+  }, []);
 
   const prepareQuestion = (verse: Verse) => {
     const words = verse.text.split(/\s+/);
@@ -48,14 +50,17 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
   };
   
   const handleRollDice = () => {
-    const roll = Math.floor(Math.random() * 3) + 1; // 1 to 3
+    const roll = Math.floor(Math.random() * 4) + 1; // 1 to 4
     setDiceRoll(roll);
-    let newPosition = playerPosition + roll;
-    if (newPosition >= section.verses.length) {
-      newPosition = section.verses.length - 1;
+    let newPosition = playerPosition < 0 ? roll - 1 : playerPosition + roll;
+
+    if (newPosition >= BOARD_SIZE) {
+      newPosition = BOARD_SIZE - 1;
     }
     
-    const question = prepareQuestion(section.verses[newPosition]);
+    const randomVerse = section.verses[Math.floor(Math.random() * section.verses.length)];
+    const question = prepareQuestion(randomVerse);
+
     if(question) {
         setCurrentQuestion(question);
         setPlayerPosition(newPosition);
@@ -63,8 +68,8 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
     } else {
         // No question could be generated, just move
         setPlayerPosition(newPosition);
-        if (newPosition === section.verses.length - 1) {
-            onGameOver(score);
+        if (newPosition === BOARD_SIZE - 1) {
+            onGameOver(score + 50); // Bonus for finishing
         }
     }
   };
@@ -80,12 +85,12 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
       if (isCorrect) {
         setScore(s => s + 20);
         if (boardLayout[playerPosition].type === 'ladder') {
-          finalPosition = Math.min(playerPosition + 2, section.verses.length - 1);
+          finalPosition = Math.min(playerPosition + 5, BOARD_SIZE - 1); // Jump forward 5 spaces
         }
       } else {
         setScore(s => Math.max(0, s - 5));
         if (boardLayout[playerPosition].type === 'stumble') {
-          finalPosition = Math.max(playerPosition - 2, 0);
+          finalPosition = Math.max(playerPosition - 5, 0); // Fall back 5 spaces
         }
       }
       
@@ -95,8 +100,8 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
       setCurrentQuestion(null);
       setDiceRoll(0);
 
-      if (finalPosition === section.verses.length - 1) {
-        onGameOver(score + (isCorrect ? 20 : 0));
+      if (finalPosition >= BOARD_SIZE - 1) {
+        onGameOver(score + (isCorrect ? 20 : 0) + 50); // Bonus for finishing
       }
     }, 1000);
   };
@@ -111,10 +116,10 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
         <div className="text-2xl font-bold text-stone-800">Score: {score}</div>
       </div>
       
-      <div className="grid grid-cols-4 gap-2 p-4 bg-white/50 rounded-lg">
-        {section.verses.map((verse, index) => (
+      <div className="grid grid-cols-5 gap-2 p-4 bg-white/50 rounded-lg">
+        {Array.from({length: BOARD_SIZE}).map((_, index) => (
           <div key={index} className={`relative aspect-square border-2 ${playerPosition === index ? 'border-amber-600 ring-4 ring-amber-500' : 'border-amber-200'} rounded-lg flex flex-col justify-center items-center p-1 text-center`}>
-            <span className="font-bold text-lg text-stone-800">{verse.verse}</span>
+            <span className="font-bold text-lg text-stone-800">{index + 1}</span>
             {boardLayout[index].type === 'ladder' && <span className="text-2xl" role="img" aria-label="Ladder">🪜</span>}
             {boardLayout[index].type === 'stumble' && <span className="text-2xl text-red-500" role="img" aria-label="Stumble">💥</span>}
              {playerPosition === index && <div className="absolute w-6 h-6 bg-amber-500 rounded-full border-2 border-white shadow-lg animate-bounce" />}
@@ -123,8 +128,8 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
       </div>
 
       <div className="text-center mt-6">
-        <button onClick={handleRollDice} disabled={showQuestion || diceRoll > 0} className="bg-amber-600 text-white font-bold text-xl py-3 px-10 rounded-lg shadow-md hover:bg-amber-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-400 disabled:bg-stone-400">
-          {diceRoll > 0 ? `Rolled a ${diceRoll}` : 'Roll Dice'}
+        <button onClick={handleRollDice} disabled={showQuestion || diceRoll > 0 || playerPosition >= BOARD_SIZE -1} className="bg-amber-600 text-white font-bold text-xl py-3 px-10 rounded-lg shadow-md hover:bg-amber-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-400 disabled:bg-stone-400">
+          {playerPosition >= BOARD_SIZE - 1 ? 'Finished!' : diceRoll > 0 ? `Rolled a ${diceRoll}` : 'Roll Dice'}
         </button>
       </div>
 

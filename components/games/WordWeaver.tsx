@@ -13,14 +13,17 @@ const WordWeaver: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
   const [wordBank, setWordBank] = useState<string[]>([]);
   const [answer, setAnswer] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
+  const [isClueUsed, setIsClueUsed] = useState(false);
 
   const currentVerse = section.verses[currentVerseIndex];
   const correctWords = useMemo(() => currentVerse.text.split(/\s+/), [currentVerse]);
+  const clueText = useMemo(() => correctWords.slice(0, 3).join(' ') + '...', [correctWords]);
 
   useEffect(() => {
     setAnswer([]);
     setWordBank([...correctWords].sort(() => 0.5 - Math.random()));
     setFeedback(null);
+    setIsClueUsed(false);
   }, [currentVerseIndex, correctWords]);
   
   const handleWordClick = (word: string, source: 'bank' | 'answer', index: number) => {
@@ -57,6 +60,13 @@ const WordWeaver: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
     }
   };
 
+  const handleGetClue = () => {
+    if (!isClueUsed) {
+      setIsClueUsed(true);
+      setScore(s => Math.max(0, s - 10)); // Penalty for using a clue
+    }
+  };
+
   const getAnswerBoxStyle = () => {
     if (feedback === 'correct') return 'border-green-500';
     if (feedback === 'incorrect') return 'border-red-500 animate-shake';
@@ -76,7 +86,18 @@ const WordWeaver: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
         </div>
       </div>
 
-      <p className="text-center text-stone-600 mb-4 text-lg">Arrange the words to form the verse.</p>
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-stone-600 text-lg">Arrange the words to form the verse.</p>
+        <button onClick={handleGetClue} disabled={isClueUsed} className="bg-stone-200 text-stone-700 font-semibold py-1 px-3 rounded-md text-sm hover:bg-stone-300 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed">
+          Get a Clue (-10 pts)
+        </button>
+      </div>
+
+      {isClueUsed && (
+        <div className="bg-amber-100/50 border border-amber-200 p-2 rounded-lg text-center mb-4">
+          <span className="font-semibold text-amber-800">Clue:</span> <span className="text-stone-700 italic">{clueText}</span>
+        </div>
+      )}
 
       <div className={`bg-white/60 rounded-lg p-4 mb-4 border-2 min-h-[100px] flex flex-wrap gap-2 items-center justify-center transition-colors ${getAnswerBoxStyle()}`}>
         {answer.map((word, index) => (
