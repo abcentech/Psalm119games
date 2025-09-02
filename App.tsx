@@ -8,6 +8,7 @@ import GameModeSelector from './components/GameModeSelector';
 import FillInTheBlanks from './components/games/FillInTheBlanks';
 import VerseAscent from './components/games/VerseAscent';
 import WordWeaver from './components/games/WordWeaver';
+import ValueTrader from './components/games/ValueTrader';
 
 
 export default function App() {
@@ -103,6 +104,8 @@ export default function App() {
               return <VerseAscent {...gameProps} />;
             case GameMode.WordWeaver:
               return <WordWeaver {...gameProps} />;
+            case GameMode.ValueTrader:
+              return <ValueTrader {...gameProps} />;
             default:
               return <GameModeSelector section={selectedSection} onSelectGameMode={handleGameModeSelect} onBack={handleBackToLevelSelect} />;
           }

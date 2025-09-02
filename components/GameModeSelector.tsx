@@ -3,6 +3,7 @@ import { GameMode, PsalmSection } from '../types';
 import KeyboardIcon from './icons/KeyboardIcon';
 import BoardIcon from './icons/BoardIcon';
 import PuzzleIcon from './icons/PuzzleIcon';
+import ScrollIcon from './icons/ScrollIcon';
 
 interface GameModeSelectorProps {
   section: PsalmSection;
@@ -35,7 +36,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ section, onSelectGa
           You've selected <span className="font-bold text-amber-700">{section.hebrewLetter}</span> (Verses {section.startVerse}-{section.endVerse}). How would you like to study?
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <GameCard
           icon={<KeyboardIcon className="w-16 h-16" />}
           title="Fill in the Blanks"
@@ -53,6 +54,12 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ section, onSelectGa
           title="Word Weaver"
           description="Reconstruct each verse by placing the jumbled words in their correct order. A true test of your knowledge!"
           onClick={() => onSelectGameMode(GameMode.WordWeaver)}
+        />
+        <GameCard
+          icon={<ScrollIcon className="w-16 h-16" />}
+          title="Value Trader"
+          description="Acquire and trade verses as precious assets to grow your treasury of wisdom."
+          onClick={() => onSelectGameMode(GameMode.ValueTrader)}
         />
       </div>
       <div className="text-center mt-8">

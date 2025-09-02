@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { PsalmSection, Verse } from '../../types';
+import ProgressBar from '../ProgressBar';
 
 interface GameProps {
   section: PsalmSection;
@@ -28,6 +29,9 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
     
     return layout;
   }, []);
+
+  const progressCurrent = Math.max(playerPosition, 0);
+  const displayPosition = playerPosition < 0 ? 0 : playerPosition + 1;
 
   const prepareQuestion = (verse: Verse) => {
     const words = verse.text.split(/\s+/);
@@ -108,13 +112,17 @@ const VerseAscent: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
 
   return (
     <div className="bg-amber-50/70 border border-amber-200 backdrop-blur-sm rounded-2xl shadow-lg p-6 md:p-8 w-full max-w-3xl mx-auto animate-fade-in">
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-2">
         <div>
           <h1 className="text-3xl font-bold text-amber-800">{section.hebrewLetter}</h1>
           <h2 className="text-xl text-stone-600">Verse Ascent</h2>
         </div>
-        <div className="text-2xl font-bold text-stone-800">Score: {score}</div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-stone-800">Score: {score}</div>
+          <div className="text-sm text-stone-600">Position {displayPosition}/{BOARD_SIZE}</div>
+        </div>
       </div>
+      <ProgressBar current={progressCurrent} total={BOARD_SIZE - 1} showLabel />
       
       <div className="grid grid-cols-5 gap-2 p-4 bg-white/50 rounded-lg">
         {Array.from({length: BOARD_SIZE}).map((_, index) => (

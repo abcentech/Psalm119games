@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { PsalmSection, Verse } from '../../types';
+import ProgressBar from '../ProgressBar';
 
 interface GameProps {
   section: PsalmSection;
@@ -56,6 +57,11 @@ const FillInTheBlanks: React.FC<GameProps> = ({ section, onGameOver, onQuit }) =
   const currentVerseData = preparedVerses[currentVerseIndex];
   const totalBlanksInVerse = currentVerseData.blanks.length;
   const currentTargetWord = totalBlanksInVerse > 0 ? currentVerseData.blanks[currentBlankIndex] : '';
+
+  const progressCurrent = useMemo(() => {
+    if (totalBlanksInVerse === 0) return currentVerseIndex;
+    return currentVerseIndex + currentBlankIndex / totalBlanksInVerse;
+  }, [currentVerseIndex, currentBlankIndex, totalBlanksInVerse]);
 
   const options = useMemo(() => {
     if (!isMultipleChoice || totalBlanksInVerse === 0) return [];
@@ -134,16 +140,19 @@ const FillInTheBlanks: React.FC<GameProps> = ({ section, onGameOver, onQuit }) =
 
   return (
     <div className="bg-amber-50/70 border border-amber-200 backdrop-blur-sm rounded-2xl shadow-lg p-6 md:p-8 w-full max-w-3xl mx-auto animate-fade-in">
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-2">
         <div>
           <h1 className="text-3xl font-bold text-amber-800">{section.hebrewLetter}</h1>
           <h2 className="text-xl text-stone-600">Fill in the Blanks</h2>
         </div>
         <div className="text-right">
           <div className="text-2xl font-bold text-stone-800">Score: {score}</div>
-          <div className="text-sm text-stone-600">Verse {currentVerseData.verseInfo.verse}</div>
+          <div className="text-sm text-stone-600">
+            Verse {currentVerseData.verseInfo.verse} ({currentVerseIndex + 1}/{preparedVerses.length})
+          </div>
         </div>
       </div>
+      <ProgressBar current={progressCurrent} total={preparedVerses.length} showLabel />
 
       <div className="flex justify-center items-center gap-4 my-4">
           <span className={`font-bold ${!isMultipleChoice ? 'text-amber-700' : 'text-stone-500'}`}>Typing</span>

@@ -10,6 +10,7 @@ export enum GameMode {
   FillInTheBlanks,
   VerseAscent,
   WordWeaver,
+  ValueTrader,
 }
 
 export interface Verse {
