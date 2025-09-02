@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PsalmSection } from '../../types';
+import ProgressBar from '../ProgressBar';
 
 interface GameProps {
   section: PsalmSection;
@@ -18,6 +19,9 @@ const WordWeaver: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
   const currentVerse = section.verses[currentVerseIndex];
   const correctWords = useMemo(() => currentVerse.text.split(/\s+/), [currentVerse]);
   const clueText = useMemo(() => correctWords.slice(0, 3).join(' ') + '...', [correctWords]);
+  const progressCurrent = useMemo(() => {
+    return currentVerseIndex + answer.length / correctWords.length;
+  }, [currentVerseIndex, answer.length, correctWords.length]);
 
   useEffect(() => {
     setAnswer([]);
@@ -75,16 +79,19 @@ const WordWeaver: React.FC<GameProps> = ({ section, onGameOver, onQuit }) => {
 
   return (
     <div className="bg-amber-50/70 border border-amber-200 backdrop-blur-sm rounded-2xl shadow-lg p-6 md:p-8 w-full max-w-3xl mx-auto animate-fade-in">
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-2">
         <div>
           <h1 className="text-3xl font-bold text-amber-800">{section.hebrewLetter}</h1>
           <h2 className="text-xl text-stone-600">Word Weaver</h2>
         </div>
         <div className="text-right">
           <div className="text-2xl font-bold text-stone-800">Score: {score}</div>
-          <div className="text-sm text-stone-600">Verse {currentVerse.verse}</div>
+          <div className="text-sm text-stone-600">
+            Verse {currentVerse.verse} ({currentVerseIndex + 1}/{section.verses.length})
+          </div>
         </div>
       </div>
+      <ProgressBar current={progressCurrent} total={section.verses.length} showLabel />
 
       <div className="flex justify-between items-center mb-4">
         <p className="text-stone-600 text-lg">Arrange the words to form the verse.</p>
